@@ -4,12 +4,15 @@ import (
 	"io/ioutil"
 )
 
-func (p *Entry) saveEntry() error {
+type FileDatabase struct {
+}
+
+func (fileDatabase FileDatabase) saveJournalEntry(p *Entry) error {
 	filename := p.Title + ".txt"
 	return ioutil.WriteFile(filename, []byte(p.Body), 0600)
 }
 
-func loadEntry(title string) (*Entry, error) {
+func (fileDatabase FileDatabase) loadJournalEntry(title string) (*Entry, error) {
 	filename := title + ".txt"
 	body, err := ioutil.ReadFile(filename)
 	var stringBody = string(body)

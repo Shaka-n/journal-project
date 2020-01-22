@@ -19,6 +19,11 @@ type Entry struct {
 	Body  string
 }
 
+type JournalEntry interface {
+	saveJournalEntry() error
+	loadJournalEntry(string) *Entry
+}
+
 func main() {
 	http.HandleFunc("/entries/", handleEntriesRequest)
 	http.HandleFunc("/entries/view/", viewEntry)
@@ -35,6 +40,8 @@ func handleEntriesRequest(response http.ResponseWriter, request *http.Request) {
 }
 
 func createEntry(response http.ResponseWriter, request *http.Request) {
+	var fileDatabase FileDatabase
+
 	body, err := ioutil.ReadAll(request.Body)
 	if err != nil {
 		panic(err)
@@ -46,12 +53,14 @@ func createEntry(response http.ResponseWriter, request *http.Request) {
 		panic(err)
 	}
 	log.Println("Entry received" + entry.Title)
-	entry.saveEntry()
+	fileDatabase.saveJournalEntry(&entry)
 }
 
 func viewEntry(w http.ResponseWriter, r *http.Request) {
+	var fileDatabase FileDatabase
+
 	title := r.URL.Path[len("/entries/"):]
-	journalEntry, err := loadEntry(title)
+	journalEntry, err := fileDatabase.loadJournalEntry(title)
 	if err != nil {
 		fmt.Fprintf(w, "<h1>Error :(</h1><div>Looks like we couldn't find your page.  Sorry about that!</div>")
 	} else {
@@ -60,8 +69,10 @@ func viewEntry(w http.ResponseWriter, r *http.Request) {
 }
 
 func editEntry(w http.ResponseWriter, r *http.Request) {
+	var fileDatabase FileDatabase
+
 	title := r.URL.Path[len("/entries/edit/"):]
-	entry, err := loadEntry(title)
+	entry, err := fileDatabase.loadJournalEntry(title)
 	if err != nil {
 		entry = &Entry{Title: title}
 	}
