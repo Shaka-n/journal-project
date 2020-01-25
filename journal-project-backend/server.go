@@ -28,6 +28,7 @@ func main() {
 	http.HandleFunc("/entries/", handleEntriesRequest)
 	http.HandleFunc("/entries/view/", viewEntry)
 	http.HandleFunc("/entries/edit/", editEntry)
+	http.Handle("/", http.FileServer(http.Dir("./build")))
 
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
