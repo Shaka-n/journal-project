@@ -1,4 +1,4 @@
-module chrispaika.com/m/v2
+module chrispaika.com/journal-project-backend/v2
 
 go 1.13
 

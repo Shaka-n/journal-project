@@ -2,3 +2,4 @@ journal-project-backend/journal-project-backend
 target/*
 *.txt
 .DS_Store
+journal-project-backend/local-dev.db
