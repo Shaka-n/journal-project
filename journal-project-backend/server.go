@@ -12,6 +12,10 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+
+	"database/sql"
+
+	_ "github.com/mattn/go-sqlite3"
 )
 
 type Entry struct {
@@ -25,6 +29,8 @@ type JournalEntry interface {
 }
 
 func main() {
+	database, _ := sql.Open("sqlite3", "./local-dev.db")
+
 	http.HandleFunc("/entries/", handleEntriesRequest)
 	http.HandleFunc("/entries/view/", viewEntry)
 	http.HandleFunc("/entries/edit/", editEntry)
