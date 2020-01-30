@@ -7,13 +7,9 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
-	"html/template"
 	"io/ioutil"
 	"log"
 	"net/http"
-
-	"database/sql"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -28,12 +24,14 @@ type JournalEntry interface {
 	loadJournalEntry(string) *Entry
 }
 
+var fileDatabase FileDatabase
+
 func main() {
-	database, _ := sql.Open("sqlite3", "./local-dev.db")
+	initializeDatabase()
 
 	http.HandleFunc("/entries/", handleEntriesRequest)
-	http.HandleFunc("/entries/view/", viewEntry)
-	http.HandleFunc("/entries/edit/", editEntry)
+	// http.HandleFunc("/entries/view/", viewEntry)
+	// http.HandleFunc("/entries/edit/", editEntry)
 	http.Handle("/", http.FileServer(http.Dir("./build")))
 
 	log.Fatal(http.ListenAndServe(":8080", nil))
@@ -43,6 +41,8 @@ func handleEntriesRequest(response http.ResponseWriter, request *http.Request) {
 	switch request.Method {
 	case "POST":
 		createEntry(response, request)
+	case "GET":
+		getEntry(response, request)
 	}
 }
 
@@ -61,28 +61,34 @@ func createEntry(response http.ResponseWriter, request *http.Request) {
 	}
 	log.Println("Entry received" + entry.Title)
 	fileDatabase.saveJournalEntry(&entry)
+	//temporary
+	fileDatabase.loadJournalEntriesForAuthor("root")
 }
 
-func viewEntry(w http.ResponseWriter, r *http.Request) {
-	var fileDatabase FileDatabase
-
-	title := r.URL.Path[len("/entries/"):]
-	journalEntry, err := fileDatabase.loadJournalEntry(title)
-	if err != nil {
-		fmt.Fprintf(w, "<h1>Error :(</h1><div>Looks like we couldn't find your page.  Sorry about that!</div>")
-	} else {
-		fmt.Fprintf(w, "<h1>%s</h1><div>%s</div>", journalEntry.Title, journalEntry.Body)
-	}
+func getEntry(response http.ResponseWriter, request *http.Request) {
+	// TODO really need a database before we implement this
 }
 
-func editEntry(w http.ResponseWriter, r *http.Request) {
-	var fileDatabase FileDatabase
+// func viewEntry(w http.ResponseWriter, r *http.Request) {
+// 	var fileDatabase FileDatabase
 
-	title := r.URL.Path[len("/entries/edit/"):]
-	entry, err := fileDatabase.loadJournalEntry(title)
-	if err != nil {
-		entry = &Entry{Title: title}
-	}
-	t, _ := template.ParseFiles("edit.html")
-	t.Execute(w, entry)
-}
+// 	title := r.URL.Path[len("/entries/"):]
+// 	journalEntry, err := fileDatabase.loadJournalEntry(title)
+// 	if err != nil {
+// 		fmt.Fprintf(w, "<h1>Error :(</h1><div>Looks like we couldn't find your page.  Sorry about that!</div>")
+// 	} else {
+// 		fmt.Fprintf(w, "<h1>%s</h1><div>%s</div>", journalEntry.Title, journalEntry.Body)
+// 	}
+// }
+
+// func editEntry(w http.ResponseWriter, r *http.Request) {
+// 	var fileDatabase FileDatabase
+
+// 	title := r.URL.Path[len("/entries/edit/"):]
+// 	entry, err := fileDatabase.loadJournalEntry(title)
+// 	if err != nil {
+// 		entry = &Entry{Title: title}
+// 	}
+// 	t, _ := template.ParseFiles("edit.html")
+// 	t.Execute(w, entry)
+// }
