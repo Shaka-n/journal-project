@@ -16,7 +16,7 @@ var database *sql.DB
 func initializeDatabase() {
 	database, _ = sql.Open("sqlite3", "./local-dev.db")
 
-	statement, _ := database.Prepare("CREATE TABLE IF NOT EXISTS journal_entry (id INTEGER PRIMARY KEY, author TEXT, title TEXT, entry TEXT)")
+	statement, _ := database.Prepare("CREATE TABLE IF NOT EXISTS journal_entry (id UUID PRIMARY KEY, author TEXT, title TEXT, entry TEXT)")
 	something, err := statement.Exec()
 	fmt.Println("Created the schema for the table")
 	fmt.Println(err)
@@ -40,6 +40,7 @@ func (fileDatabase FileDatabase) saveJournalEntry(entry *Entry) error {
 		log.Fatal("Error writing to the database")
 		log.Fatal(err)
 	}
+	log.Println("Successfully stored entry")
 	return nil
 }
 
@@ -48,7 +49,7 @@ func (fileDatabase FileDatabase) loadJournalEntriesForAuthor(author string) (*En
 	var results []Entry
 	var title string
 	var body string
-	rows, err := database.Query("select title, entry from journal_entry where author = root", 1)
+	rows, err := database.Query("select title, entry FROM journal_entry WHERE author = \"root\"", 1)
 	if err != nil {
 		log.Fatal("Failed reading from the database")
 		log.Fatal(err)
