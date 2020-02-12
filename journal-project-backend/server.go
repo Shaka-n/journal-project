@@ -51,8 +51,6 @@ func handleEntriesRequest(response http.ResponseWriter, request *http.Request) {
 }
 
 func createEntry(response http.ResponseWriter, request *http.Request) {
-	userIDCookie, _ := request.Cookie("UserID")
-	userID, _ := uuid.Parse(userIDCookie.Value)
 	body, err := ioutil.ReadAll(request.Body)
 	if err != nil {
 		panic(err)
@@ -64,15 +62,16 @@ func createEntry(response http.ResponseWriter, request *http.Request) {
 		panic(err)
 	}
 	log.Println("Entry received" + entry.Title)
-	fileDatabase.saveJournalEntry(userID, &entry)
+	fileDatabase.saveJournalEntry(getUserIDFromCookie(request), &entry)
+	response.WriteHeader(http.StatusCreated)
+	// TODO return the one journal entry created from the database
 }
 
 func getEntry(response http.ResponseWriter, request *http.Request) {
-	userIDCookie, _ := request.Cookie("UserID")
-	userID, _ := uuid.Parse(userIDCookie.Value)
+
 	title := request.URL.Path[len("/entries/"):]
 	log.Println("Title: " + title)
-	journalEntries, err := fileDatabase.loadJournalEntriesForUser(userID)
+	journalEntries, err := fileDatabase.loadJournalEntriesForUser(getUserIDFromCookie(request))
 	response.Header().Set("Content-Type", "application/json")
 	if err != nil {
 		response.WriteHeader(http.StatusInternalServerError)
@@ -80,4 +79,11 @@ func getEntry(response http.ResponseWriter, request *http.Request) {
 	} else {
 		json.NewEncoder(response).Encode(journalEntries)
 	}
+}
+
+// TODO add error handling
+func getUserIDFromCookie(request *http.Request) uuid.UUID {
+	userIDCookie, _ := request.Cookie("UserID")
+	userID, _ := uuid.Parse(userIDCookie.Value)
+	return userID
 }
