@@ -44,7 +44,7 @@ func (fileDatabase FileDatabase) saveJournalEntry(entry *Entry) error {
 	return nil
 }
 
-func (fileDatabase FileDatabase) loadJournalEntriesForAuthor(author string) (*Entry, error) {
+func (fileDatabase FileDatabase) loadJournalEntriesForAuthor(author string) (*[]Entry, error) {
 	//TODO understand slices
 	var results []Entry
 	var title string
@@ -68,5 +68,5 @@ func (fileDatabase FileDatabase) loadJournalEntriesForAuthor(author string) (*En
 	if err != nil {
 		log.Fatal(err)
 	}
-	return nil, nil
+	return &results, nil
 }

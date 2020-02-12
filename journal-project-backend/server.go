@@ -7,6 +7,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -28,7 +29,8 @@ var fileDatabase FileDatabase
 
 func main() {
 	initializeDatabase()
-
+	// TODO - need a cookie for having the author set
+	// TODO - Also need TLS, via lets encrypt
 	http.HandleFunc("/entries/", handleEntriesRequest)
 	// http.HandleFunc("/entries/view/", viewEntry)
 	// http.HandleFunc("/entries/edit/", editEntry)
@@ -47,8 +49,6 @@ func handleEntriesRequest(response http.ResponseWriter, request *http.Request) {
 }
 
 func createEntry(response http.ResponseWriter, request *http.Request) {
-	var fileDatabase FileDatabase
-
 	body, err := ioutil.ReadAll(request.Body)
 	if err != nil {
 		panic(err)
@@ -61,34 +61,17 @@ func createEntry(response http.ResponseWriter, request *http.Request) {
 	}
 	log.Println("Entry received" + entry.Title)
 	fileDatabase.saveJournalEntry(&entry)
-	//temporary
-	fileDatabase.loadJournalEntriesForAuthor("root")
 }
 
 func getEntry(response http.ResponseWriter, request *http.Request) {
-	// TODO really need a database before we implement this
+	title := request.URL.Path[len("/entries/"):]
+	log.Println("Title: " + title)
+	journalEntries, err := fileDatabase.loadJournalEntriesForAuthor("root")
+	response.Header().Set("Content-Type", "application/json")
+	if err != nil {
+		response.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintf(response, "{error: \"Error getting entries\"}")
+	} else {
+		json.NewEncoder(response).Encode(journalEntries)
+	}
 }
-
-// func viewEntry(w http.ResponseWriter, r *http.Request) {
-// 	var fileDatabase FileDatabase
-
-// 	title := r.URL.Path[len("/entries/"):]
-// 	journalEntry, err := fileDatabase.loadJournalEntry(title)
-// 	if err != nil {
-// 		fmt.Fprintf(w, "<h1>Error :(</h1><div>Looks like we couldn't find your page.  Sorry about that!</div>")
-// 	} else {
-// 		fmt.Fprintf(w, "<h1>%s</h1><div>%s</div>", journalEntry.Title, journalEntry.Body)
-// 	}
-// }
-
-// func editEntry(w http.ResponseWriter, r *http.Request) {
-// 	var fileDatabase FileDatabase
-
-// 	title := r.URL.Path[len("/entries/edit/"):]
-// 	entry, err := fileDatabase.loadJournalEntry(title)
-// 	if err != nil {
-// 		entry = &Entry{Title: title}
-// 	}
-// 	t, _ := template.ParseFiles("edit.html")
-// 	t.Execute(w, entry)
-// }
