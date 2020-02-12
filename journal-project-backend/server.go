@@ -12,6 +12,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/google/uuid"
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -27,9 +28,10 @@ type JournalEntry interface {
 
 var fileDatabase FileDatabase
 
+// TODO secure the cookie for our application
+
 func main() {
 	initializeDatabase()
-	// TODO - need a cookie for having the author set
 	// TODO - Also need TLS, via lets encrypt
 	http.HandleFunc("/entries/", handleEntriesRequest)
 	// http.HandleFunc("/entries/view/", viewEntry)
@@ -49,6 +51,8 @@ func handleEntriesRequest(response http.ResponseWriter, request *http.Request) {
 }
 
 func createEntry(response http.ResponseWriter, request *http.Request) {
+	userIDCookie, _ := request.Cookie("UserID")
+	userID, _ := uuid.Parse(userIDCookie.Value)
 	body, err := ioutil.ReadAll(request.Body)
 	if err != nil {
 		panic(err)
@@ -60,13 +64,15 @@ func createEntry(response http.ResponseWriter, request *http.Request) {
 		panic(err)
 	}
 	log.Println("Entry received" + entry.Title)
-	fileDatabase.saveJournalEntry(&entry)
+	fileDatabase.saveJournalEntry(userID, &entry)
 }
 
 func getEntry(response http.ResponseWriter, request *http.Request) {
+	userIDCookie, _ := request.Cookie("UserID")
+	userID, _ := uuid.Parse(userIDCookie.Value)
 	title := request.URL.Path[len("/entries/"):]
 	log.Println("Title: " + title)
-	journalEntries, err := fileDatabase.loadJournalEntriesForAuthor("root")
+	journalEntries, err := fileDatabase.loadJournalEntriesForUser(userID)
 	response.Header().Set("Content-Type", "application/json")
 	if err != nil {
 		response.WriteHeader(http.StatusInternalServerError)
