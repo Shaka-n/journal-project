@@ -16,7 +16,7 @@ var database *sql.DB
 func initializeDatabase() {
 	database, _ = sql.Open("sqlite3", "./local-dev.db")
 
-	statement, _ := database.Prepare("CREATE TABLE IF NOT EXISTS journal_entry (id UUID PRIMARY KEY, author TEXT, title TEXT, entry TEXT)")
+	statement, _ := database.Prepare("CREATE TABLE IF NOT EXISTS journal_entry (id UUID PRIMARY KEY, userId UUID, title TEXT, entry TEXT)")
 	something, err := statement.Exec()
 	fmt.Println("Created the schema for the table")
 	fmt.Println(err)
@@ -33,9 +33,9 @@ func initializeDatabase() {
 }
 
 // TODO - add a concept of users to the application
-func (fileDatabase FileDatabase) saveJournalEntry(entry *Entry) error {
+func (fileDatabase FileDatabase) saveJournalEntry(userId uuid.UUID, entry *Entry) error {
 	primaryKey := (uuid.New()).String()
-	_, err := database.Exec("INSERT INTO journal_entry VALUES($1, $2, $3, $4)", primaryKey, "root", entry.Title, entry.Body)
+	_, err := database.Exec("INSERT INTO journal_entry VALUES($1, $2, $3, $4)", primaryKey, userId, entry.Title, entry.Body)
 	if err != nil {
 		log.Fatal("Error writing to the database")
 		log.Fatal(err)
@@ -44,12 +44,12 @@ func (fileDatabase FileDatabase) saveJournalEntry(entry *Entry) error {
 	return nil
 }
 
-func (fileDatabase FileDatabase) loadJournalEntriesForAuthor(author string) (*[]Entry, error) {
+func (fileDatabase FileDatabase) loadJournalEntriesForUser(userID uuid.UUID) (*[]Entry, error) {
 	//TODO understand slices
 	var results []Entry
 	var title string
 	var body string
-	rows, err := database.Query("select title, entry FROM journal_entry WHERE author = \"root\"", 1)
+	rows, err := database.Query("select title, entry FROM journal_entry WHERE userId = $1", userID)
 	if err != nil {
 		log.Fatal("Failed reading from the database")
 		log.Fatal(err)
