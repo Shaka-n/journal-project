@@ -5,6 +5,23 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-color: #282c34;
+  color: white;
+  padding: 40px;
+  font-family: Arial;
+  text-align: left;
+}
+
+textarea{
+  background-color: white;
+  width: 400px;
+}
+#title{
+  font-size: 20px;
+}
+#body{
+  width: 600px;
+  height:400px;
 }
 
 code {
